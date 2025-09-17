@@ -1,9 +1,31 @@
 '''
-Deposito somente número positivo
+Função Saque
+argumentos apenas por nome
+função (saque: saque)
 
-Saques 3 por dia e limitado a 500 por operação
+Função Depósito
+argumentos apenas por posição
 
-Extrato todas as movimentações realizadas na conta
+Função Extrato
+argumentos por nome e posição
+posicional: saldo
+nomeado: extrato
+
+================
+
+Novas funções
+
+Função criar usuário
+em lista com nome, data nascimento, cpf e endereço(string com logradouro[,nº] - bairro - cidade/sigla estado)
+cpf somente número
+não é possível cadastrar 2 cpf
+
+Função criar conta
+em lista com agencia, numero conta e usuario
+numero conta é sequencial, numero agencia fixo em 0001
+usuario pode ter multiplas contas
+uma conta pertence somente a um usuário
+contas necessitam de um usuário
 '''
 
 import unicodedata
@@ -35,6 +57,19 @@ def converte_float(numero):
 
 # Mensagens para operações
 class MSG:
+
+    class Usuario:
+        class Entrada:
+            class Cadastro:
+                nome = "\Informe seu Nome\n>>> "
+                cpf = "\Informe seu CPF | Somente números\n>>> "
+                endereco = "\Informe seu endereço com número da residencia\n>>> "
+                bairro = "\Informe seu bairro\n>>> "
+                estado = "\Informe seu Estado\n>>> "
+                cidade = "\Informe sua cidade\n>>> "
+                data_nasc = "\Informe sua data de nascimento\n>>> "
+        class Erro:
+            conta_existente = "\nUsuário já cadastrado"
     
     # Mensagens para saque
     class Saque:
@@ -73,7 +108,7 @@ class MSG:
 
 # Variáveis
 opcao = 0
-
+usuario = None
 class Conta:
     saldo = 0    
     consulta_extrato=None
@@ -83,20 +118,67 @@ class Conta:
 
 class Menu:
     titulo = " Caixa Eletrônico "
-    opcao = """
-    Escolha uma operação
- 
-    1 - Saque
-    2 - Depósito
-    3 - Extrato
-        
-    4 - Sair
-    """
+    class Inicio:
+        menu_pricipal = """
+        Bem Vindo
+        Porfavor escolha uma opção
 
-def entradas (tipo):
+        1 - Cadastrar novo Usuário
+        2 - Cadastrar nova Conta
+        3 - Listar Contas
+        4 - Listar Usuários
+        5 - Excluir Conta
+        6 - Excluir Usuário
+
+        7 - Sair
+        """
+    class Operacao:
+        opcao = """
+        Escolha uma operação
+    
+        1 - Saque
+        2 - Depósito
+        3 - Extrato
+            
+        4 - Sair
+        """
+
+def entradas_cadastro_user (usuario):
+    endereco = []
+    if (usuario == None):
+        usuario = []
+
+    usuario.append(input(MSG.Usuario.Entrada.Cadastro.nome))
+    usuario.append(input(MSG.Usuario.Entrada.Cadastro.cpf))
+    usuario.append(input(MSG.Usuario.Entrada.Cadastro.data_nasc))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.endereco))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.bairro))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.estado))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.cidade))
+    usuario.append(endereco)
+
+    return usuario
+
+def entradas_cadastro_user_account (usuario):
+    endereco = []
+    if (usuario == None):
+        usuario = []
+
+    usuario.append(input(MSG.Usuario.Cadastro.nome))
+    usuario.append(input(MSG.Usuario.Cadastro.cpf))
+    usuario.append(input(MSG.Usuario.Cadastro.data_nasc))
+    endereco.append(input(MSG.Usuario.Cadastro.endereco))
+    endereco.append(input(MSG.Usuario.Cadastro.bairro))
+    endereco.append(input(MSG.Usuario.Cadastro.estado))
+    endereco.append(input(MSG.Usuario.Cadastro.cidade))
+    usuario.append(endereco)
+
+    return usuario
+
+def entradas_operacao (tipo):
 
     mensagem = {
-        "principal": f"\n{Menu.titulo.center(30, '#')}\n{Menu.opcao.center(30)}\n>>> ",
+        "principal": f"\n{Menu.titulo.center(30, '#')}\n{Menu.Operacao.opcao.center(30)}\n>>> ",
         "saque": "\nDigite um valor para sacar\n>>> ",
         "deposito": "\nDigite um valor para depositar\n>>> "
     }
@@ -127,7 +209,7 @@ def main ():
 
     while True:
     
-        opcao = entradas("principal")
+        opcao = entradas_operacao("principal")
 
         opcao_padronizada = padroniza(opcao)
 
@@ -154,7 +236,7 @@ def saque ():
             print(MSG.Saque.Erro.sem_limite)
             break
 
-        valor_sacado = entradas("saque")
+        valor_sacado = entradas_operacao("saque")
 
         if (valor_sacado == "Error"):
             print(MSG.Erro.conversao)
@@ -186,7 +268,7 @@ def deposito ():
 
     while True:
 
-        valor_depositado = entradas("deposito")
+        valor_depositado = entradas_operacao("deposito")
 
         if (valor_depositado == "Error"):
             print(MSG.Erro.conversao)
