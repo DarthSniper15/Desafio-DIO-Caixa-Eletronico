@@ -26,6 +26,13 @@ numero conta é sequencial, numero agencia fixo em 0001
 usuario pode ter multiplas contas
 uma conta pertence somente a um usuário
 contas necessitam de um usuário
+
+
+Funções em estudo
+            3 - Listar Contas
+            4 - Listar Usuários
+            5 - Excluir Conta
+            6 - Excluir Usuário
 '''
 
 import unicodedata
@@ -61,16 +68,17 @@ class MSG:
     class Usuario:
         class Entrada:
             class Cadastro:
-                nome = "\Informe seu Nome\n>>> "
-                cpf = "\Informe seu CPF | Somente números\n>>> "
-                endereco = "\Informe seu endereço\n>>> "
-                numero = "\Informe o número da residencia\n>>> "
-                bairro = "\Informe seu bairro\n>>> "
-                estado = "\Informe seu Estado\n>>> "
-                cidade = "\Informe sua cidade\n>>> "
-                data_nasc = "\Informe sua data de nascimento\n>>> "
+                nome = "\nInforme seu Nome\n>>> "
+                cpf = "\nInforme seu CPF | Somente números\n>>> "
+                endereco = "\nInforme seu endereço\n>>> "
+                numero = "\nInforme o número da residencia\n>>> "
+                bairro = "\nInforme seu bairro\n>>> "
+                estado = "\nInforme seu Estado\n>>> "
+                cidade = "\nInforme sua cidade\n>>> "
+                data_nasc = "\nInforme sua data de nascimento\n>>> "
         class Erro:
             conta_existente = "\nUsuário já cadastrado"
+            conta_inexistente = "\nUsuário não encontrado no sistema"
     
     # Mensagens para saque
     class Saque:
@@ -107,6 +115,30 @@ class MSG:
     class Erro:
         conversao = "\nValor inválido, tente novamente\n"
 
+    class Menu:
+        titulo = " Caixa Eletrônico "
+        class Cadastro:
+            menu_pricipal = """
+        Bem Vindo
+        Porfavor escolha uma opção
+
+        1 - Cadastrar novo Usuário
+        2 - Cadastrar nova Conta
+        3 - Realizar Movimentação
+
+        4 - Sair
+            """
+        class Operacao:
+            opcao = """
+        Escolha uma operação
+
+        1 - Saque
+        2 - Depósito
+        3 - Extrato
+                
+        4 - Sair
+            """
+
 # Variáveis
 opcao = 0
 usuarios = None
@@ -118,75 +150,12 @@ class Conta:
         saques = 3
         diario = 500
 
-class Menu:
-    titulo = " Caixa Eletrônico "
-    class Inicio:
-        menu_pricipal = """
-        Bem Vindo
-        Porfavor escolha uma opção
-
-        1 - Cadastrar novo Usuário
-        2 - Cadastrar nova Conta
-        3 - Listar Contas
-        4 - Listar Usuários
-        5 - Excluir Conta
-        6 - Excluir Usuário
-
-        7 - Sair
-        """
-    class Operacao:
-        opcao = """
-        Escolha uma operação
-    
-        1 - Saque
-        2 - Depósito
-        3 - Extrato
-            
-        4 - Sair
-        """
-'''
-Entradas para criação de usuário
-estrutura usuario [pessoa, endereco]
-estrutura pessoa [cpf, nome, data nascimento]
-estrutura endereco [endereco, numero, bairro, estado, cidade]
-estrutura de acesso usuarios[usuario][dado da pessoa][dado do endereco]
-'''
-def entradas_cadastro_user (usuarios):
-
-    endereco = []
-    pessoa = []
-
-    if usuarios is None:
-        usuarios = []
-
-    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.cpf))
-    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.nome))
-    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.data_nasc))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.endereco))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.numero))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.bairro))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.estado))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.cidade))
-    usuarios.append([pessoa, endereco])
-
-    return usuarios
-
-# Entradas para criação de conta
-def entradas_cadastro_user_account (usuarios, usuario):
-
-    conta = []
-    numero_conta += 1
-    conta.append("0001")
-    conta.append(str(numero_conta).zfill(10))
-    usuarios[usuario].append(conta)
-
-    return usuarios, numero_conta
 
 # Entradas das operações
 def entradas_operacao (tipo):
 
     mensagem = {
-        "principal": f"\n{Menu.titulo.center(30, '#')}\n{Menu.Operacao.opcao.center(30)}\n>>> ",
+        "principal": f"\n{MSG.Menu.titulo.center(30, '#')}\n{MSG.Menu.Operacao.opcao.center(30)}\n>>> ",
         "saque": "\nDigite um valor para sacar\n>>> ",
         "deposito": "\nDigite um valor para depositar\n>>> "
     }
@@ -201,7 +170,43 @@ def entradas_operacao (tipo):
 
 
 # Operações bancárias
-def main ():
+def main (usuarios, numero_conta):
+
+    if usuarios is None:
+        usuarios = []
+
+    while True:
+
+        opcao = input(f"\n{MSG.Menu.titulo.center(30, '#')}\n{MSG.Menu.Cadastro.menu_pricipal}\n>>> ")
+
+        opcao_padronizada = padroniza(opcao)
+
+        if opcao_padronizada == 1:
+            dados = cadastrar_usuario(usuarios)
+            if "lista_usuarios" in dados:
+                usuarios = dados["lista_usuarios"]
+
+        elif opcao_padronizada == 2:
+            dados = cadastrar_conta(usuarios, numero_conta)
+            if "lista_usuarios" in dados:
+                usuarios = dados["lista_usuarios"]
+            if "conta" in dados:
+                numero_conta = dados["conta"]
+
+        elif opcao_padronizada == 3:
+            movimentacoes()
+
+        elif opcao_padronizada == "printar":
+            print(usuarios)
+
+        elif opcao_padronizada == "sair" or opcao_padronizada == 4:
+            print(MSG.Caixa.sair)
+            break
+
+        else:
+            print(MSG.Caixa.Erro.opcao_indisponivel)
+
+def movimentacoes ():
 
     operacoes = {
         1: saque,
@@ -234,6 +239,59 @@ def main ():
         else:
             print(MSG.Caixa.Erro.opcao_indisponivel)
 
+
+'''
+Entradas para criação de usuário
+estrutura usuario [pessoa, endereco]
+estrutura pessoa [cpf, nome, data nascimento]
+estrutura endereco [endereco, numero, bairro, estado, cidade]
+estrutura de acesso usuarios[usuario][dado da pessoa][dado do endereco]
+'''
+def cadastrar_usuario (usuarios):
+
+    endereco = []
+    pessoa = []
+
+    if usuarios is None:
+        usuarios = []
+
+    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.cpf))
+    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.nome))
+    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.data_nasc))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.endereco))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.numero))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.bairro))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.estado))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.cidade))
+    usuarios.append([pessoa, endereco])
+
+    return {"lista_usuarios": usuarios}
+
+# Entradas para criação de conta
+def cadastrar_conta (usuarios, numero_conta):
+
+    conta = []
+    numero_conta += 1
+
+    while True:
+
+        cpf = input("\nConta será criada para qual usuário?\nDigite o CPF | Somente número\n>>> ")
+
+        for i, usuario in enumerate(usuarios):
+            if usuario[0][0] == cpf:
+                index_usuario = i
+            else:
+                index_usuario = None
+
+        if index_usuario is not None:
+            conta.append("0001")
+            conta.append(str(numero_conta).zfill(10))
+            usuarios[index_usuario].append(conta)
+            break
+        else:
+            print(MSG.Usuario.Erro.conta_inexistente)
+
+    return {"lista_usuarios": usuarios, "conta": numero_conta}
 
 # Código para saque
 def saque ():
@@ -308,4 +366,4 @@ def extrato ():
     return {"consulta_extrato": Conta.consulta_extrato}
 
 # Inicia o programa
-main()
+main(usuarios, numero_conta)
