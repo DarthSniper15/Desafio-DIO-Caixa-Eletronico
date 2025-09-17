@@ -63,7 +63,8 @@ class MSG:
             class Cadastro:
                 nome = "\Informe seu Nome\n>>> "
                 cpf = "\Informe seu CPF | Somente números\n>>> "
-                endereco = "\Informe seu endereço com número da residencia\n>>> "
+                endereco = "\Informe seu endereço\n>>> "
+                numero = "\Informe o número da residencia\n>>> "
                 bairro = "\Informe seu bairro\n>>> "
                 estado = "\Informe seu Estado\n>>> "
                 cidade = "\Informe sua cidade\n>>> "
@@ -108,7 +109,8 @@ class MSG:
 
 # Variáveis
 opcao = 0
-usuario = None
+usuarios = None
+numero_conta = 0
 class Conta:
     saldo = 0    
     consulta_extrato=None
@@ -142,39 +144,45 @@ class Menu:
             
         4 - Sair
         """
+'''
+Entradas para criação de usuário
+estrutura usuario [pessoa, endereco]
+estrutura pessoa [cpf, nome, data nascimento]
+estrutura endereco [endereco, numero, bairro, estado, cidade]
+estrutura de acesso usuarios[usuario][dado da pessoa][dado do endereco]
+'''
+def entradas_cadastro_user (usuarios):
 
-def entradas_cadastro_user (usuario):
     endereco = []
-    if (usuario == None):
-        usuario = []
+    pessoa = []
 
-    usuario.append(input(MSG.Usuario.Entrada.Cadastro.nome))
-    usuario.append(input(MSG.Usuario.Entrada.Cadastro.cpf))
-    usuario.append(input(MSG.Usuario.Entrada.Cadastro.data_nasc))
+    if usuarios is None:
+        usuarios = []
+
+    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.cpf))
+    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.nome))
+    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.data_nasc))
     endereco.append(input(MSG.Usuario.Entrada.Cadastro.endereco))
+    endereco.append(input(MSG.Usuario.Entrada.Cadastro.numero))
     endereco.append(input(MSG.Usuario.Entrada.Cadastro.bairro))
     endereco.append(input(MSG.Usuario.Entrada.Cadastro.estado))
     endereco.append(input(MSG.Usuario.Entrada.Cadastro.cidade))
-    usuario.append(endereco)
+    usuarios.append([pessoa, endereco])
 
-    return usuario
+    return usuarios
 
-def entradas_cadastro_user_account (usuario):
-    endereco = []
-    if (usuario == None):
-        usuario = []
+# Entradas para criação de conta
+def entradas_cadastro_user_account (usuarios, usuario):
 
-    usuario.append(input(MSG.Usuario.Cadastro.nome))
-    usuario.append(input(MSG.Usuario.Cadastro.cpf))
-    usuario.append(input(MSG.Usuario.Cadastro.data_nasc))
-    endereco.append(input(MSG.Usuario.Cadastro.endereco))
-    endereco.append(input(MSG.Usuario.Cadastro.bairro))
-    endereco.append(input(MSG.Usuario.Cadastro.estado))
-    endereco.append(input(MSG.Usuario.Cadastro.cidade))
-    usuario.append(endereco)
+    conta = []
+    numero_conta += 1
+    conta.append("0001")
+    conta.append(str(numero_conta).zfill(10))
+    usuarios[usuario].append(conta)
 
-    return usuario
+    return usuarios, numero_conta
 
+# Entradas das operações
 def entradas_operacao (tipo):
 
     mensagem = {
