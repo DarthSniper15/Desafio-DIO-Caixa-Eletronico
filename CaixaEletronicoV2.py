@@ -180,9 +180,9 @@ def entrada_numerica(entrada):
 
 def valida_cpf(entrada):
 
-    entrada = "".join(filter(str.isdigit(), entrada))
+    entrada = "".join(filter(str.isdigit, entrada))
 
-    if (len(entrada.isdigit())) == 11:
+    if (len(entrada) and entrada.isdigit()) == 11:
         return entrada
     
     else:
@@ -206,10 +206,15 @@ def entradas_validas (tipo_operacao, tipo):
         }
 
         mensagem = mensagem.get(tipo, "\nDigite um valor\n>>>")
-        entrada = input(mensagem)
 
-        if tipo in ["saque", "deposito"]:
-            entrada = converte_float(entrada)
+        while True:
+            entrada = input(mensagem)
+            entrada_convertida = converte_float(entrada)
+
+            if entrada_convertida == -1:
+                print(MSG.Erro.conversao)
+            else:
+                return entrada_convertida
 
     elif tipo_operacao == "cadastro":
         mensagem = {
@@ -224,42 +229,37 @@ def entradas_validas (tipo_operacao, tipo):
         }
 
         mensagem = mensagem.get(tipo, "\nDigite um valor\n>>>")
-        entrada = input(mensagem)
 
         while True:
+            entrada = input(mensagem)
+
+            if (entrada == ""):
+                print(MSG.Usuario.Entrada.Erro.campo_vazio)
+            
             if tipo == "cpf":
-                entrada = valida_cpf(entrada)
+                entrada_convertida = valida_cpf(entrada)
                 if (entrada != -1):
-                    return entrada
-                elif (entrada == ""):
-                    print(MSG.Usuario.Entrada.Erro.campo_vazio)
+                    return entrada_convertida
                 else:
                     print(MSG.Usuario.Entrada.Erro.cpf_invalido)
 
             elif tipo == "numero":
-                entrada = entrada_numerica(entrada)
+                entrada_convertida = entrada_numerica(entrada)
                 if (entrada != -1):
-                    return entrada
-                elif (entrada == ""):
-                    print(MSG.Usuario.Entrada.Erro.campo_vazio)
+                    return entrada_convertida
                 else:
                     print(MSG.Usuario.Entrada.Erro.numero_incorreto)
 
             elif tipo == "nascimento":
-                entrada = converte_data(entrada)
+                entrada_convertida = converte_data(entrada)
                 if (entrada != -1):
-                    return entrada
-                elif (entrada == ""):
-                    print(MSG.Usuario.Entrada.Erro.campo_vazio)
+                    return entrada_convertida
                 else:
                     print(MSG.Usuario.Entrada.Erro.data_invalida)
 
             else:
-                entrada = padroniza(entrada)
-                if (entrada != ""):
-                    return entrada
-                else:
-                    print(MSG.Usuario.Entrada.Erro.campo_vazio)
+                entrada_convertida = padroniza(entrada)
+                return entrada_convertida
 
     return entrada
 
@@ -402,7 +402,7 @@ def cadastrar_usuario (usuarios):
         usuarios = []
 
     pessoa.append(entradas_validas("cadastro", "cpf"))
-    pessoa.append(entradas_validas("cadastro" "nome"))
+    pessoa.append(entradas_validas("cadastro", "nome"))
     pessoa.append(entradas_validas("cadastro", "data_nasc"))
     endereco.append(entradas_validas("cadastro", "endereco"))
     endereco.append(entradas_validas("cadastro", "numero"))
