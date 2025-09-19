@@ -253,8 +253,11 @@ def main (usuarios, limite_saque, limite_diario, saldo, log_extrato, numero_cont
             usuarios = dados["lista_usuarios"]
             numero_conta = dados["conta"]
 
-        elif opcao_padronizada == 3:
-            movimentacoes(limite_saque=limite_saque, limite_diario=limite_diario, saldo=saldo, log_extrato=log_extrato, usuarios=usuarios)
+        elif opcao_padronizada == 3:    
+            dados_conta = pega_conta(usuarios)
+            usuario = dados_conta["usuario"]
+            conta = dados_conta["conta"]
+            movimentacoes(limite_saque=limite_saque, limite_diario=limite_diario, saldo=usuarios[usuario][2][conta][2], log_extrato=usuarios[usuario][2][conta][3], usuarios=usuarios, usuario=usuario, conta=conta)
 
         elif opcao_padronizada == "printar":
             print(usuarios)
@@ -269,11 +272,7 @@ def main (usuarios, limite_saque, limite_diario, saldo, log_extrato, numero_cont
         else:
             print(MSG.Caixa.Erro.opcao_indisponivel)
 
-def movimentacoes (*, limite_saque, limite_diario, saldo, log_extrato, usuarios):
-
-    dados_conta = pega_conta(usuarios)
-    usuario = dados_conta["usuario"]
-    conta = dados_conta["conta"]
+def movimentacoes (*, limite_saque, limite_diario, saldo, log_extrato, usuarios, usuario, conta):
 
     if conta == -1:
         print(MSG.Erro.sem_usuarios)
@@ -292,19 +291,19 @@ def movimentacoes (*, limite_saque, limite_diario, saldo, log_extrato, usuarios)
         opcao = padroniza(entradas_operacao("principal"))
 
         if opcao == "saque" or opcao == 1:
-            dados = saque(limite_saque=limite_saque, saldo=saldo, limite_diario=limite_diario, log_extrato=log_extrato)
+            dados = saque(limite_saque=limite_saque, saldo=usuarios[usuario][2][conta][2], limite_diario=limite_diario, usuarios=usuarios, usuario=usuario, conta=conta)
             limite_saque = dados["limite_saques"]
-            log_extrato = dados["consulta_extrato"]
             usuarios[usuario][2][conta][2] = dados["saldo"]
+
 
         elif opcao == "deposito" or opcao == 2:
-            dados = deposito(saldo, log_extrato)
-            log_extrato = dados["consulta_extrato"]
+            #(saldo | extrato)
+            dados = deposito(usuarios[usuario][2][conta][2], usuarios, usuario, conta)
             usuarios[usuario][2][conta][2] = dados["saldo"]
 
+
         elif opcao == "extrato" or opcao == 3:
-            dados = extrato(log_extrato, saldo=usuarios[usuario][2][conta][2])
-            log_extrato = dados["consulta_extrato"]
+            dados = extrato(usuarios[usuario][2][conta][3], saldo=usuarios[usuario][2][conta][2])
 
         elif opcao == "voltar" or opcao == 4:
             print(MSG.Caixa.sair)
@@ -357,7 +356,7 @@ def cadastrar_conta (*, usuarios, numero_conta):
                 index_usuario = None
 
         if index_usuario is not None:
-            nova_conta = ["0001", str(numero_conta).zfill(10), 0.0]
+            nova_conta = ["0001", str(numero_conta).zfill(10), 0.0, []]
 
             if len(usuarios[index_usuario]) < 3:
                 usuarios[index_usuario].append([nova_conta])  # inicia lista de contas
@@ -373,7 +372,7 @@ def cadastrar_conta (*, usuarios, numero_conta):
     return {"lista_usuarios": usuarios, "conta": numero_conta}
 
 # Código para saque
-def saque (*, limite_saque, saldo, limite_diario, log_extrato):
+def saque (*, limite_saque, saldo, limite_diario, usuarios, usuario, conta):
 
     while True:
 
@@ -401,15 +400,15 @@ def saque (*, limite_saque, saldo, limite_diario, log_extrato):
 
         else: 
             saldo-= valor_sacado
-            limite_saque-= 1
-            log_extrato.append(f"-R$ {valor_sacado:.2f}")
+            limite_saque-= 1            
+            usuarios[usuario][2][conta][3].append(f"-R$ {valor_sacado:.2f}")
             print(MSG.Saque.bem_sucedido)
             break
 
-    return {"saldo": saldo, "consulta_extrato": log_extrato, "limite_saques": limite_saque}
+    return {"saldo": saldo, "limite_saques": limite_saque}
 
 # Código para depósito
-def deposito (saldo, log_extrato):
+def deposito (saldo, usuarios, usuario, conta):
 
     while True:
 
@@ -422,12 +421,12 @@ def deposito (saldo, log_extrato):
             print(MSG.Deposito.Erro.invalido)
 
         else:
-            saldo+= valor_depositado
-            log_extrato.append(f"+R$ {valor_depositado:.2f}")
+            saldo += valor_depositado
+            usuarios[usuario][2][conta][3].append(f"+R$ {valor_depositado:.2f}")
             break
 
     print(MSG.Deposito.bem_sucedido)
-    return {"saldo": saldo, "consulta_extrato": log_extrato}
+    return {"saldo": saldo}
 
 # Código para consultar extrato
 def extrato (log_extrato, *, saldo):
