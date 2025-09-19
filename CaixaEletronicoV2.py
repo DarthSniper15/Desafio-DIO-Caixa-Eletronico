@@ -62,6 +62,25 @@ def converte_float(numero):
 
     return padronizado
 
+def entrada_numerica(entrada):
+
+    try:
+        padronizado = int(entrada)
+        
+    except ValueError:
+        try:
+            padronizado = float(entrada)
+
+        except ValueError:
+
+            try:
+                padronizado = float(entrada.replace(",", "."))
+
+            except ValueError:
+                padronizado = "Error"
+
+    return padronizado
+
 # Mensagens para operações
 class MSG:
 
@@ -116,6 +135,7 @@ class MSG:
         conversao = "\nValor inválido, tente novamente\n"
         sem_usuarios = "\nNão há usuários cadastrados no sistema\n"
         sem_conta = "\nNão há contas cadastradas no sistema para este usuário\n"
+        entrada_numero = "\nSó é permitido entrada numérica"
 
     class Menu:
         titulo = " Caixa Eletrônico "
@@ -185,8 +205,15 @@ def pega_conta (usuarios):
 
         print(f"{index_usuarios} - {usuarios[index_usuarios][0][1]}")
         index_usuarios += 1
+        
 
-    usuario_selecionado = padroniza(input(f"\nQual o usuário deseja acessar?\n>>> "))
+    while True:
+        usuario_selecionado = entrada_numerica(input(f"\nQual o usuário deseja acessar?\n>>> "))
+
+        if (usuario_selecionado == "Error"):
+            print(MSG.Erro.entrada_numero)
+        else:
+            break
 
     try: 
         len(usuarios[usuario_selecionado][2])
@@ -194,10 +221,18 @@ def pega_conta (usuarios):
     except IndexError:
         return -2
     
-    for i, contas in enumerate(usuarios[usuario_selecionado][2]):
-        print(f"{i} - Número da conta: {contas[i]}")
+    for i, lista_contas in enumerate(usuarios[usuario_selecionado][2]):
+        print(f"{i} - Conta Número: {lista_contas[1]}")
 
-    conta_selecionada = input(f"\nQual a conta que será movimentada?\n>>> ")
+    while True:
+        conta_selecionada = entrada_numerica(input(f"\nQual a conta que será movimentada?\n>>> "))
+
+        if (conta_selecionada == "Error"):
+            print(MSG.Erro.entrada_numero)
+        else:
+            break
+
+    return {"conta_selecionada": usuarios[usuario_selecionado][2][conta_selecionada]}
 
 # Operações bancárias
 def main (usuarios, conta, limite_saque, limite_diario, saldo, log_extrato, numero_conta):
@@ -226,6 +261,9 @@ def main (usuarios, conta, limite_saque, limite_diario, saldo, log_extrato, nume
 
         elif opcao_padronizada == "printar":
             print(usuarios)
+
+        elif opcao_padronizada == "printar contas":
+            print(usuarios[0][2])
 
         elif opcao_padronizada == "sair" or opcao_padronizada == 4:
             print(MSG.Caixa.sair)
@@ -317,9 +355,16 @@ def cadastrar_conta (*, usuarios, numero_conta, conta):
                 index_usuario = None
 
         if index_usuario is not None:
-            conta[1] = str(numero_conta).zfill(10)
-            usuarios[index_usuario].append(conta)
+            nova_conta = ["0001", str(numero_conta).zfill(10), 0.0]
+
+            if len(usuarios[index_usuario]) < 3:
+                usuarios[index_usuario].append([nova_conta])  # inicia lista de contas
+
+            else:
+                usuarios[index_usuario][2].append(nova_conta)  # adiciona nova conta
+
             break
+
         else:
             print(MSG.Usuario.Erro.conta_inexistente)
 
