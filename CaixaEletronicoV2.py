@@ -37,50 +37,6 @@ Funções em estudo
 
 import unicodedata
 
-# Padronizar opções para padrão unicode sem acentos
-def padroniza(opcao):
-    if (opcao.isdigit()):
-        padronizado = int(opcao)
-    else:
-        padronizar = unicodedata.normalize('NFKD', opcao)
-        padronizado = ''.join(c for c in padronizar if not unicodedata.combining(c)).lower()
-    return padronizado
-
-# Conversor para float Padrão Brasileiro pra Internacional
-def converte_float(numero):
-
-    try:
-        padronizado = float(numero)
-
-    except ValueError:
-
-        try:
-            padronizado = float(numero.replace(",", "."))
-
-        except ValueError:
-            padronizado = "Error"
-
-    return padronizado
-
-def entrada_numerica(entrada):
-
-    try:
-        padronizado = int(entrada)
-        
-    except ValueError:
-        try:
-            padronizado = float(entrada)
-
-        except ValueError:
-
-            try:
-                padronizado = float(entrada.replace(",", "."))
-
-            except ValueError:
-                padronizado = "Error"
-
-    return padronizado
-
 # Mensagens para operações
 class MSG:
 
@@ -95,6 +51,13 @@ class MSG:
                 estado = "\nInforme seu Estado\n>>> "
                 cidade = "\nInforme sua cidade\n>>> "
                 data_nasc = "\nInforme sua data de nascimento\n>>> "
+
+            class Erro:
+                cpf_invalido = "\nCPF inválido, tente novamente\n>>> "
+                data_invalida = "\nData inválida, tente novamente\n>>> "
+                campo_vazio = "\nCampo não pode ser vazio\n>>> "
+                numero_incorreto = "\nNúmero inválido, tente novamente\n>>> "
+
         class Erro:
             conta_existente = "\nUsuário já cadastrado"
             conta_inexistente = "\nUsuário não encontrado no sistema"
@@ -171,21 +134,132 @@ consulta_extrato = None
 limite_saques = 3
 limite_diario = 500
 
+# Padronizar opções para padrão unicode sem acentos
+def padroniza(opcao):
+    if (opcao.isdigit()):
+        padronizado = int(opcao)
+    else:
+        padronizar = unicodedata.normalize('NFKD', opcao)
+        padronizado = ''.join(c for c in padronizar if not unicodedata.combining(c)).lower()
+    return padronizado
+
+# Conversor para float Padrão Brasileiro pra Internacional
+def converte_float(numero):
+
+    try:
+        padronizado = float(numero)
+
+    except ValueError:
+
+        try:
+            padronizado = float(numero.replace(",", "."))
+
+        except ValueError:
+            padronizado = "Error"
+
+    return padronizado
+
+def entrada_numerica(entrada):
+
+    try:
+        padronizado = int(entrada)
+        
+    except ValueError:
+        try:
+            padronizado = float(entrada)
+
+        except ValueError:
+
+            try:
+                padronizado = float(entrada.replace(",", "."))
+
+            except ValueError:
+                padronizado = "Error"
+
+    return padronizado
+
+def valida_cpf(entrada):
+
+    entrada = "".join(filter(str.isdigit(), entrada))
+
+    if (len(entrada.isdigit())) == 11:
+        return entrada
+    
+    else:
+        return -1
+
+def converte_data (entrada):
+
+    if len(entrada) == 8 and entrada.isdigit():
+        return f"{entrada[:2]}/{entrada[2:4]}/{entrada[4:]}"
+    else:
+        return -1
 
 # Entradas das operações
-def entradas_operacao (tipo):
+def entradas_validas (tipo_operacao, tipo):
 
-    mensagem = {
-        "principal": f"\n{MSG.Menu.titulo.center(30, '#')}\n{MSG.Menu.Operacao.opcao.center(30)}\n>>> ",
-        "saque": "\nDigite um valor para sacar\n>>> ",
-        "deposito": "\nDigite um valor para depositar\n>>> "
-    }
+    if tipo_operacao == "movimentacao":
+        mensagem = {
+            "principal": f"\n{MSG.Menu.titulo.center(30, '#')}\n{MSG.Menu.Operacao.opcao.center(30)}\n>>> ",
+            "saque": "\nDigite um valor para sacar\n>>> ",
+            "deposito": "\nDigite um valor para depositar\n>>> "
+        }
 
-    mensagem = mensagem.get(tipo, "\nDigite um valor\n>>>")
-    entrada = input(mensagem)
+        mensagem = mensagem.get(tipo, "\nDigite um valor\n>>>")
+        entrada = input(mensagem)
 
-    if tipo in ["saque", "deposito"]:
-        entrada = converte_float(entrada)
+        if tipo in ["saque", "deposito"]:
+            entrada = converte_float(entrada)
+
+    elif tipo_operacao == "cadastro":
+        mensagem = {
+            "cpf": f"\n{MSG.Usuario.Entrada.Cadastro.cpf}\n>>> ",
+            "nome": f"\n{MSG.Usuario.Entrada.Cadastro.nome}\n>>> ",
+            "nascimento": f"\{MSG.Usuario.Entrada.Cadastro.data_nasc}\n>>> ",
+            "endereco": f"\{MSG.Usuario.Entrada.Cadastro.endereco}\n>>> ",
+            "numero": f"\{MSG.Usuario.Entrada.Cadastro.numero}\n>>> ",
+            "bairro": f"\{MSG.Usuario.Entrada.Cadastro.bairro}\n>>> ",
+            "estado": f"\{MSG.Usuario.Entrada.Cadastro.estado}\n>>> ",
+            "cidade": f"\{MSG.Usuario.Entrada.Cadastro.cidade}\n>>> "
+        }
+
+        mensagem = mensagem.get(tipo, "\nDigite um valor\n>>>")
+        entrada = input(mensagem)
+
+        while True:
+            if tipo == "cpf":
+                entrada = valida_cpf(entrada)
+                if (entrada != -1):
+                    return entrada
+                elif (entrada == ""):
+                    print(MSG.Usuario.Entrada.Erro.campo_vazio)
+                else:
+                    print(MSG.Usuario.Entrada.Erro.cpf_invalido)
+
+            elif tipo == "numero":
+                entrada = entrada_numerica(entrada)
+                if (entrada != -1):
+                    return entrada
+                elif (entrada == ""):
+                    print(MSG.Usuario.Entrada.Erro.campo_vazio)
+                else:
+                    print(MSG.Usuario.Entrada.Erro.numero_incorreto)
+
+            elif tipo == "nascimento":
+                entrada = converte_data(entrada)
+                if (entrada != -1):
+                    return entrada
+                elif (entrada == ""):
+                    print(MSG.Usuario.Entrada.Erro.campo_vazio)
+                else:
+                    print(MSG.Usuario.Entrada.Erro.data_invalida)
+
+            else:
+                entrada = padroniza(entrada)
+                if (entrada != ""):
+                    return entrada
+                else:
+                    print(MSG.Usuario.Entrada.Erro.campo_vazio)
 
     return entrada
 
@@ -232,7 +306,7 @@ def pega_conta (usuarios):
     return {"conta": conta_selecionada, "usuario": usuario_selecionado}
 
 # Operações bancárias
-def main (usuarios, limite_saque, limite_diario, saldo, log_extrato, numero_conta):
+def main (usuarios, limite_saque, limite_diario, numero_conta):
 
     if usuarios is None:
         usuarios = []
@@ -288,7 +362,7 @@ def movimentacoes (*, limite_saque, limite_diario, saldo, log_extrato, usuarios,
     print(f"\nUsuário logado: {usuarios[usuario][0][1]}")
 
     while True:
-        opcao = padroniza(entradas_operacao("principal"))
+        opcao = padroniza(entradas_validas("movimentacao", "principal"))
 
         if opcao == "saque" or opcao == 1:
             dados = saque(limite_saque=limite_saque, saldo=usuarios[usuario][2][conta][2], limite_diario=limite_diario, usuarios=usuarios, usuario=usuario, conta=conta)
@@ -327,14 +401,14 @@ def cadastrar_usuario (usuarios):
     if usuarios is None:
         usuarios = []
 
-    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.cpf))
-    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.nome))
-    pessoa.append(input(MSG.Usuario.Entrada.Cadastro.data_nasc))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.endereco))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.numero))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.bairro))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.estado))
-    endereco.append(input(MSG.Usuario.Entrada.Cadastro.cidade))
+    pessoa.append(entradas_validas("cadastro", "cpf"))
+    pessoa.append(entradas_validas("cadastro" "nome"))
+    pessoa.append(entradas_validas("cadastro", "data_nasc"))
+    endereco.append(entradas_validas("cadastro", "endereco"))
+    endereco.append(entradas_validas("cadastro", "numero"))
+    endereco.append(entradas_validas("cadastro", "bairro"))
+    endereco.append(entradas_validas("cadastro", "estado"))
+    endereco.append(entradas_validas("cadastro", "cidade"))
     usuarios.append([pessoa, endereco])
 
     return {"lista_usuarios": usuarios}
@@ -345,6 +419,9 @@ def cadastrar_conta (*, usuarios, numero_conta):
     numero_conta += 1
 
     while True:
+
+        for i, usuario in enumerate(usuarios):
+            print(f"{i} - {usuario[0][0]}")
 
         cpf = input("\nConta será criada para qual usuário?\nDigite o CPF | Somente número\n>>> ")
 
@@ -380,7 +457,7 @@ def saque (*, limite_saque, saldo, limite_diario, usuarios, usuario, conta):
             print(MSG.Saque.Erro.sem_limite)
             break
 
-        valor_sacado = entradas_operacao("saque")
+        valor_sacado = entradas_validas("movimentacao", "saque")
 
         if (valor_sacado == "Error"):
             print(MSG.Erro.conversao)
@@ -412,7 +489,7 @@ def deposito (saldo, usuarios, usuario, conta):
 
     while True:
 
-        valor_depositado = entradas_operacao("deposito")
+        valor_depositado = entradas_validas("movimentacao", "deposito")
 
         if (valor_depositado == "Error"):
             print(MSG.Erro.conversao)
@@ -444,4 +521,4 @@ def extrato (log_extrato, *, saldo):
     return {"consulta_extrato": log_extrato}
 
 # Inicia o programa
-main(usuarios, limite_saques, limite_diario, saldo, consulta_extrato, numero_conta)
+main(usuarios, limite_saques, limite_diario, numero_conta)
