@@ -53,10 +53,10 @@ class MSG:
                 data_nasc = "\nInforme sua data de nascimento\n>>> "
 
             class Erro:
-                cpf_invalido = "\nCPF inválido, tente novamente\n>>> "
-                data_invalida = "\nData inválida, tente novamente\n>>> "
-                campo_vazio = "\nCampo não pode ser vazio\n>>> "
-                numero_incorreto = "\nNúmero inválido, tente novamente\n>>> "
+                cpf_invalido = "\nCPF inválido, tente novamente"
+                data_invalida = "\nData inválida, tente novamente"
+                campo_vazio = "\nCampo não pode ser vazio"
+                numero_incorreto = "\nNúmero inválido, tente novamente"
 
         class Erro:
             conta_existente = "\nUsuário já cadastrado"
@@ -180,9 +180,11 @@ def entrada_numerica(entrada):
 
 def valida_cpf(entrada):
 
+    entrada = str(entrada)
+
     entrada = "".join(filter(str.isdigit, entrada))
 
-    if (len(entrada) and entrada.isdigit()) == 11:
+    if (len(entrada) == 11 and entrada.isdigit()):
         return entrada
     
     else:
@@ -218,14 +220,14 @@ def entradas_validas (tipo_operacao, tipo):
 
     elif tipo_operacao == "cadastro":
         mensagem = {
-            "cpf": f"\n{MSG.Usuario.Entrada.Cadastro.cpf}\n>>> ",
-            "nome": f"\n{MSG.Usuario.Entrada.Cadastro.nome}\n>>> ",
-            "nascimento": f"\{MSG.Usuario.Entrada.Cadastro.data_nasc}\n>>> ",
-            "endereco": f"\{MSG.Usuario.Entrada.Cadastro.endereco}\n>>> ",
-            "numero": f"\{MSG.Usuario.Entrada.Cadastro.numero}\n>>> ",
-            "bairro": f"\{MSG.Usuario.Entrada.Cadastro.bairro}\n>>> ",
-            "estado": f"\{MSG.Usuario.Entrada.Cadastro.estado}\n>>> ",
-            "cidade": f"\{MSG.Usuario.Entrada.Cadastro.cidade}\n>>> "
+            "cpf": f"\n{MSG.Usuario.Entrada.Cadastro.cpf}",
+            "nome": f"\n{MSG.Usuario.Entrada.Cadastro.nome}",
+            "nascimento": f"\n{MSG.Usuario.Entrada.Cadastro.data_nasc}",
+            "endereco": f"\n{MSG.Usuario.Entrada.Cadastro.endereco}",
+            "numero": f"\n{MSG.Usuario.Entrada.Cadastro.numero}",
+            "bairro": f"\n{MSG.Usuario.Entrada.Cadastro.bairro}",
+            "estado": f"\n{MSG.Usuario.Entrada.Cadastro.estado}",
+            "cidade": f"\n{MSG.Usuario.Entrada.Cadastro.cidade}"
         }
 
         mensagem = mensagem.get(tipo, "\nDigite um valor\n>>>")
@@ -236,40 +238,35 @@ def entradas_validas (tipo_operacao, tipo):
             if (entrada == ""):
                 print(MSG.Usuario.Entrada.Erro.campo_vazio)
             
-            if tipo == "cpf":
-                entrada_convertida = valida_cpf(entrada)
+            elif tipo == "cpf":
+                entrada = valida_cpf(entrada)
                 if (entrada != -1):
-                    return entrada_convertida
+                    return entrada
                 else:
                     print(MSG.Usuario.Entrada.Erro.cpf_invalido)
 
             elif tipo == "numero":
-                entrada_convertida = entrada_numerica(entrada)
+                entrada = entrada_numerica(entrada)
                 if (entrada != -1):
-                    return entrada_convertida
+                    return entrada
                 else:
                     print(MSG.Usuario.Entrada.Erro.numero_incorreto)
 
             elif tipo == "nascimento":
-                entrada_convertida = converte_data(entrada)
+                entrada = converte_data(entrada)
                 if (entrada != -1):
-                    return entrada_convertida
+                    return entrada
                 else:
                     print(MSG.Usuario.Entrada.Erro.data_invalida)
 
             else:
-                entrada_convertida = padroniza(entrada)
-                return entrada_convertida
-
-    return entrada
+                entrada = padroniza(entrada)
+                return entrada
 
 def pega_conta (usuarios):
 
     if usuarios == []:
-        return -1
-    
-    if len(usuarios) == 2:
-        return -2
+        return  {"error": -1}
 
     index_usuarios = 0
 
@@ -286,11 +283,14 @@ def pega_conta (usuarios):
         else:
             break
 
+    if len(usuarios[usuario_selecionado]) == 2:
+        return {"error": -2}
+
     try: 
         len(usuarios[usuario_selecionado][2])
 
     except IndexError:
-        return -2
+        return {"error": -2}
     
     for i, lista_contas in enumerate(usuarios[usuario_selecionado][2]):
         print(f"{i} - Conta Número: {lista_contas[1]}")
@@ -301,9 +301,9 @@ def pega_conta (usuarios):
         if (conta_selecionada == "Error"):
             print(MSG.Erro.entrada_numero)
         else:
-            break
+            return {"conta": conta_selecionada, "usuario": usuario_selecionado}
 
-    return {"conta": conta_selecionada, "usuario": usuario_selecionado}
+
 
 # Operações bancárias
 def main (usuarios, limite_saque, limite_diario, numero_conta):
@@ -329,9 +329,15 @@ def main (usuarios, limite_saque, limite_diario, numero_conta):
 
         elif opcao_padronizada == 3:    
             dados_conta = pega_conta(usuarios)
-            usuario = dados_conta["usuario"]
-            conta = dados_conta["conta"]
-            movimentacoes(limite_saque=limite_saque, limite_diario=limite_diario, saldo=usuarios[usuario][2][conta][2], log_extrato=usuarios[usuario][2][conta][3], usuarios=usuarios, usuario=usuario, conta=conta)
+            if "error" in dados_conta:
+                if dados_conta["error"] == -1:
+                    print(MSG.Erro.sem_usuarios)
+                else:
+                    print(MSG.Erro.sem_conta)
+            else:
+                usuario = dados_conta["usuario"]
+                conta = dados_conta["conta"]
+                movimentacoes(limite_diario=usuarios[usuario][2][conta][4], log_extrato=usuarios[usuario][2][conta][3], usuarios=usuarios, usuario=usuario, conta=conta)
 
         elif opcao_padronizada == "printar":
             print(usuarios)
@@ -346,7 +352,7 @@ def main (usuarios, limite_saque, limite_diario, numero_conta):
         else:
             print(MSG.Caixa.Erro.opcao_indisponivel)
 
-def movimentacoes (*, limite_saque, limite_diario, saldo, log_extrato, usuarios, usuario, conta):
+def movimentacoes (*, limite_diario, log_extrato, usuarios, usuario, conta):
 
     if conta == -1:
         print(MSG.Erro.sem_usuarios)
@@ -362,16 +368,16 @@ def movimentacoes (*, limite_saque, limite_diario, saldo, log_extrato, usuarios,
     print(f"\nUsuário logado: {usuarios[usuario][0][1]}")
 
     while True:
-        opcao = padroniza(entradas_validas("movimentacao", "principal"))
+        opcao = entrada_numerica(entradas_validas("movimentacao", "principal"))
 
         if opcao == "saque" or opcao == 1:
-            dados = saque(limite_saque=limite_saque, saldo=usuarios[usuario][2][conta][2], limite_diario=limite_diario, usuarios=usuarios, usuario=usuario, conta=conta)
-            limite_saque = dados["limite_saques"]
+            dados = saque(limite_saque=usuarios[usuario][2][conta][5], saldo=usuarios[usuario][2][conta][2], limite_diario=limite_diario, usuarios=usuarios, usuario=usuario, conta=conta)
+            usuarios[usuario][2][conta][5] = dados["limite_saques"]
             usuarios[usuario][2][conta][2] = dados["saldo"]
 
 
         elif opcao == "deposito" or opcao == 2:
-            #(saldo | extrato)
+            #deposito(saldo, lista de usuarios, usuario selecionado, conta selecionada)
             dados = deposito(usuarios[usuario][2][conta][2], usuarios, usuario, conta)
             usuarios[usuario][2][conta][2] = dados["saldo"]
 
@@ -401,14 +407,19 @@ def cadastrar_usuario (usuarios):
     if usuarios is None:
         usuarios = []
 
+    # Cria uma lista temporária da pessoa
     pessoa.append(entradas_validas("cadastro", "cpf"))
     pessoa.append(entradas_validas("cadastro", "nome"))
-    pessoa.append(entradas_validas("cadastro", "data_nasc"))
+    pessoa.append(entradas_validas("cadastro", "nascimento"))
+
+    # Cria uma lista temporária de endereço
     endereco.append(entradas_validas("cadastro", "endereco"))
     endereco.append(entradas_validas("cadastro", "numero"))
     endereco.append(entradas_validas("cadastro", "bairro"))
     endereco.append(entradas_validas("cadastro", "estado"))
     endereco.append(entradas_validas("cadastro", "cidade"))
+
+    # Integra ambas as listas temporárias na lista do sistema
     usuarios.append([pessoa, endereco])
 
     return {"lista_usuarios": usuarios}
@@ -420,10 +431,13 @@ def cadastrar_conta (*, usuarios, numero_conta):
 
     while True:
 
+        # Imprime na tela todos os usuários no sistema
         for i, usuario in enumerate(usuarios):
             print(f"{i} - {usuario[0][0]}")
 
-        cpf = input("\nConta será criada para qual usuário?\nDigite o CPF | Somente número\n>>> ")
+        conta_usuario = padroniza(input("\nConta será criada para qual usuário?\n>>> "))
+
+        cpf = usuarios[conta_usuario][0][0]
 
         for i, usuario in enumerate(usuarios):
             if usuario[0][0] == cpf:
@@ -433,7 +447,8 @@ def cadastrar_conta (*, usuarios, numero_conta):
                 index_usuario = None
 
         if index_usuario is not None:
-            nova_conta = ["0001", str(numero_conta).zfill(10), 0.0, []]
+            # conta = [agencia, numero conta, saldo, extrato, limite diario, limite saque]
+            nova_conta = ["0001", str(numero_conta).zfill(10), 0.0, [], 500, 3]
 
             if len(usuarios[index_usuario]) < 3:
                 usuarios[index_usuario].append([nova_conta])  # inicia lista de contas
