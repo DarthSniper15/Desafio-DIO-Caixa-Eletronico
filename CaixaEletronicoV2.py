@@ -94,6 +94,7 @@ class MSG:
     # Mensagens para Caixa
     class Caixa:
         sair = "\nObrigado por usar nossos serviços"
+        desligar = "\nCaixa desligado para manutenção"
         
         class Erro:
             opcao_indisponivel = "\nOpção indisponível, por favor selecione uma opção válida\n"
@@ -182,7 +183,7 @@ def entrada_numerica(entrada):
                 padronizado = float(entrada.replace(",", "."))
 
             except ValueError:
-                padronizado = "Error"
+                padronizado = -1
 
     return padronizado
 
@@ -384,7 +385,7 @@ def main (usuarios, numero_conta):
             print(usuarios[0][2])
 
         elif opcao_padronizada == "sair" or opcao_padronizada == 4:
-            print(MSG.Caixa.sair)
+            print(MSG.Caixa.desligar)
             break
 
         else:
@@ -435,7 +436,6 @@ Entradas para criação de usuário
 estrutura usuario [pessoa, endereco]
 estrutura pessoa [cpf, nome, data nascimento]
 estrutura endereco [endereco, numero, bairro, estado, cidade]
-estrutura de acesso usuarios[usuario][dado da pessoa][dado do endereco]
 '''
 def cadastrar_usuario (usuarios):
 
