@@ -1,4 +1,5 @@
 import unicodedata
+from abc import ABC
 
 # Mensagens para operações
 class MSG:
@@ -80,11 +81,12 @@ class MSG:
     Bem Vindo
     Porfavor escolha uma opção
 
-    1 - Cadastrar novo Usuário
-    2 - Cadastrar nova Conta
-    3 - Realizar Movimentação
+    1 - Cadastrar nova Pessoa
+    2 - Cadastrar novo Usuário
+    3 - Cadastrar nova Conta
+    4 - Realizar Movimentação
 
-    4 - Sair
+    5 - Sair
             """
         
         class Operacao:
@@ -291,13 +293,17 @@ def pega_conta (usuarios):
         else:
             return {"conta": conta_selecionada, "usuario": usuario_selecionado}
 
-class Conta:
+class Pessoa_Fisica:
+    
+    def Cadastrar_Pessoa (self, usuarios):
+        self.cpf = entradas_validas("cadastro", "cpf", usuarios)
+        self.nome = entradas_validas("cadastro", "nome")
+        self.data_nascimento = entradas_validas("cadastro", "nascimento")
 
-    def __init__(self):
-        pass
-
+class Cliente (Pessoa_Fisica):
+        
     def Cadastrar_Usuario (self, usuarios):
-            
+
         endereco = []
         pessoa = []
 
@@ -305,9 +311,9 @@ class Conta:
             usuarios = []
 
         # Cria uma lista temporária da pessoa
-        pessoa.append(entradas_validas("cadastro", "cpf", usuarios))
-        pessoa.append(entradas_validas("cadastro", "nome"))
-        pessoa.append(entradas_validas("cadastro", "nascimento"))
+        pessoa.append(self.cpf)
+        pessoa.append(self.nome)
+        pessoa.append(self.data_nascimento)
 
         # Cria uma lista temporária de endereço
         endereco.append(entradas_validas("cadastro", "endereco"))
@@ -322,6 +328,8 @@ class Conta:
         print(MSG.Usuario.Entrada.Sucesso.cadastro_realizado)
 
         return {"lista_usuarios": usuarios}
+
+class Conta (Cliente):
 
     def Cadastrar_Conta (self, usuarios, numero_conta):
         numero_conta += 1
@@ -363,6 +371,15 @@ class Conta:
         print(MSG.Usuario.Entrada.Sucesso.conta_cadastrada)
 
         return {"lista_usuarios": usuarios, "conta": numero_conta}
+
+class Conta_Corrente (Conta):
+    _saldo = 0.0
+    _numero = 0
+
+
+class Transacao (Conta_Corrente):
+
+    valor = 0
 
     def Saque (self, *, limite_saque, saldo, limite_diario, usuarios, usuario, conta):
             
@@ -419,6 +436,8 @@ class Conta:
         print(MSG.Deposito.bem_sucedido)
         return {"saldo": saldo}
 
+class Historico ():
+
     def Extrato (self, log_extrato, *, saldo):
         
         if (len(log_extrato) == 0):
@@ -433,3 +452,60 @@ class Conta:
             print(f"{MSG.Extrato.saldo_atualizado} R$ {saldo:.2f}")
 
         return {"consulta_extrato": log_extrato}
+
+def movimentacoes ():
+    pass
+
+def main (usuarios, numero_conta):
+
+    if usuarios is None:
+        usuarios = []
+
+    while True:
+
+        opcao = input(f"\n{MSG.Menu.titulo.center(30, '#')}\n{MSG.Menu.Cadastro.menu_pricipal}\n>>> ")
+
+        opcao_padronizada = Padronizacao.Texto(opcao)
+
+        if opcao_padronizada == 1:
+            dados = Pessoa_Fisica.Cadastrar_Pessoa(usuarios)
+
+        elif opcao_padronizada == 2:
+            dados = Conta.Cadastrar_Usuario(usuarios)
+
+            if "lista_usuarios" in dados:
+                usuarios = dados["lista_usuarios"]
+
+        elif opcao_padronizada == 3:
+            dados = Conta.Cadastrar_Conta(usuarios=usuarios, numero_conta=numero_conta)
+            usuarios = dados["lista_usuarios"]
+            numero_conta = dados["conta"]
+
+        elif opcao_padronizada == 4:
+
+            dados_conta = pega_conta(usuarios)
+
+            if "error" in dados_conta:
+
+                if dados_conta["error"] == -1:
+                    print(MSG.Erro.sem_usuarios)
+
+                else:
+                    print(MSG.Erro.sem_conta)
+            else:
+                usuario = dados_conta["usuario"]
+                conta = dados_conta["conta"]
+                movimentacoes(limite_diario=usuarios[usuario][2][conta][4], log_extrato=usuarios[usuario][2][conta][3], usuarios=usuarios, usuario=usuario, conta=conta)
+
+        elif opcao_padronizada == "printar":
+            print(usuarios)
+
+        elif opcao_padronizada == "printar contas":
+            print(usuarios[0][2])
+
+        elif opcao_padronizada == "sair" or opcao_padronizada == 4:
+            print(MSG.Caixa.desligar)
+            break
+
+        else:
+            print(MSG.Caixa.Erro.opcao_indisponivel)
