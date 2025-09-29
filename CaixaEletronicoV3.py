@@ -1,5 +1,5 @@
 import unicodedata
-from abc import ABC
+from abc import ABC, abstractmethod
 
 # Mensagens para operações
 class MSG:
@@ -293,165 +293,69 @@ def pega_conta (usuarios):
         else:
             return {"conta": conta_selecionada, "usuario": usuario_selecionado}
 
+class Transacao (ABC):
+
+    @abstractmethod
+    def Depositar ():
+        pass
+
+    @abstractmethod
+    def Sacar ():
+        pass
+
 class Pessoa_Fisica:
     
-    def Cadastrar_Pessoa (self, usuarios):
-        self.cpf = entradas_validas("cadastro", "cpf", usuarios)
-        self.nome = entradas_validas("cadastro", "nome")
-        self.data_nascimento = entradas_validas("cadastro", "nascimento")
+    def __init__(self, cpf, nome, data_nascimento):
+        self._cpf = cpf # string
+        self._nome = nome # string
+        self._data_nascimento = data_nascimento # date
 
 class Cliente (Pessoa_Fisica):
-        
-    def Cadastrar_Usuario (self, usuarios):
-
-        endereco = []
-        pessoa = []
-
-        if usuarios is None:
-            usuarios = []
-
-        # Cria uma lista temporária da pessoa
-        pessoa.append(self.cpf)
-        pessoa.append(self.nome)
-        pessoa.append(self.data_nascimento)
-
-        # Cria uma lista temporária de endereço
-        endereco.append(entradas_validas("cadastro", "endereco"))
-        endereco.append(entradas_validas("cadastro", "numero"))
-        endereco.append(entradas_validas("cadastro", "bairro"))
-        endereco.append(entradas_validas("cadastro", "estado"))
-        endereco.append(entradas_validas("cadastro", "cidade"))
-
-        # Integra ambas as listas temporárias na lista do sistema
-        usuarios.append([pessoa, endereco])
-
-        print(MSG.Usuario.Entrada.Sucesso.cadastro_realizado)
-
-        return {"lista_usuarios": usuarios}
+    
+    def __init__(self, endereco, contas):
+        self._endereco = endereco # string
+        self._contas = contas # lista
 
 class Conta (Cliente):
 
-    def Cadastrar_Conta (self, usuarios, numero_conta):
-        numero_conta += 1
+    def __init__ (self, saldo, numero, agencia, cliente, historico):
+        self._saldo = saldo # float
+        self._numero = numero # int
+        self._agencia = agencia # str
+        self._cliente = cliente
+        self._historico = historico
 
-        while True:
+    def Saldo (self):
+        pass
 
-            # Imprime na tela todos os usuários no sistema
-            for i, usuario in enumerate(usuarios):
-                print(f"{i} - {usuario[0][0]}")
+    def Nova_Conta (self):
+        pass
 
-            conta_usuario = Padronizacao.Texto(input("\nConta será criada para qual usuário?\n>>> "))
+    def Sacar (self, valor):
+        pass
 
-            cpf = usuarios[conta_usuario][0][0]
-
-            for i, usuario in enumerate(usuarios):
-
-                if usuario[0][0] == cpf:
-                    index_usuario = i
-                    break
-
-                else:
-                    index_usuario = None
-
-            if index_usuario is not None:
-                # conta = [agencia, numero conta, saldo, extrato, limite diario, limite saque]
-                nova_conta = ["0001", str(numero_conta).zfill(10), 0.0, [], 500, 3]
-
-                if len(usuarios[index_usuario]) < 3:
-                    usuarios[index_usuario].append([nova_conta])  # inicia lista de contas
-
-                else:
-                    usuarios[index_usuario][2].append(nova_conta)  # adiciona nova conta
-
-                break
-
-            else:
-                print(MSG.Erro.Cadastro.conta_inexistente)
-
-        print(MSG.Usuario.Entrada.Sucesso.conta_cadastrada)
-
-        return {"lista_usuarios": usuarios, "conta": numero_conta}
+    def Depositar (self, valor):
+        pass
 
 class Conta_Corrente (Conta):
-    _saldo = 0.0
-    _numero = 0
+    
+    def __init__(self, limite, limite_saque):
+        self._limite = limite # float
+        self._limite_saques = limite_saque # int
 
 
-class Transacao (Conta_Corrente):
+class Movimentacao (Conta_Corrente, Transacao):
 
-    valor = 0
+    def Sacar (self):
+        pass
 
-    def Saque (self, *, limite_saque, saldo, limite_diario, usuarios, usuario, conta):
-            
-        while True:
+    def Depositar (self):
+        pass
 
-            if (limite_saque == 0):
-                print(MSG.Erro.Saque.sem_limite)
-                break
+class Historico (Movimentacao):
 
-            valor_sacado = entradas_validas("movimentacao", "saque")
-
-            if (valor_sacado == "Error"):
-                print(MSG.Erro.Conversao.numero_invalido)
-            
-            elif (saldo == 0):
-                print(MSG.Erro.Saque.saldo_zerado)
-                break
-
-            elif (valor_sacado > limite_diario):
-                print(MSG.Erro.Saque.acima_limite)
-            
-            elif (valor_sacado > saldo):
-                print(MSG.Erro.Saque.saldo_insuficiente)
-
-            elif (valor_sacado < 0):
-                print(MSG.Erro.Saque.valor_invalido)
-
-            else: 
-                saldo-= valor_sacado
-                limite_saque-= 1            
-                usuarios[usuario][2][conta][3].append(f"-R$ {valor_sacado:.2f}")
-                print(MSG.Saque.bem_sucedido)
-                break
-
-        return {"saldo": saldo, "limite_saques": limite_saque}
-
-    def Deposito (self, saldo, usuarios, usuario, conta):
-            
-        while True:
-
-            valor_depositado = entradas_validas("movimentacao", "deposito")
-
-            if (valor_depositado == "Error"):
-                print(MSG.Erro.Conversao.numero_invalido)
-
-            elif (valor_depositado <= 0):
-                print(MSG.Erro.Deposito.invalido)
-
-            else:
-                saldo += valor_depositado
-                usuarios[usuario][2][conta][3].append(f"+R$ {valor_depositado:.2f}")
-                break
-
-        print(MSG.Deposito.bem_sucedido)
-        return {"saldo": saldo}
-
-class Historico ():
-
-    def Extrato (self, log_extrato, *, saldo):
-        
-        if (len(log_extrato) == 0):
-            print(MSG.Extrato.sem_movimentacao)
-
-        else: 
-            print(f"\n {MSG.Extrato.consulta}\n")
-
-            for movimentacao in log_extrato:
-                print(movimentacao)
-
-            print(f"{MSG.Extrato.saldo_atualizado} R$ {saldo:.2f}")
-
-        return {"consulta_extrato": log_extrato}
+    def Extrato (self):
+        pass
 
 def movimentacoes ():
     pass
@@ -488,10 +392,10 @@ def main (usuarios, numero_conta):
             if "error" in dados_conta:
 
                 if dados_conta["error"] == -1:
-                    print(MSG.Erro.sem_usuarios)
+                    print(MSG.Erro.Cadastro.sem_usuarios)
 
                 else:
-                    print(MSG.Erro.sem_conta)
+                    print(MSG.Erro.Cadastro.sem_conta)
             else:
                 usuario = dados_conta["usuario"]
                 conta = dados_conta["conta"]
@@ -508,4 +412,4 @@ def main (usuarios, numero_conta):
             break
 
         else:
-            print(MSG.Caixa.Erro.opcao_indisponivel)
+            print(MSG.Erro.Caixa.opcao_indisponivel)
