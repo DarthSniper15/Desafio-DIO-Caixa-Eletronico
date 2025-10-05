@@ -1,6 +1,7 @@
 import unicodedata
 from abc import ABC, abstractmethod
 from datetime import datetime
+import textwrap
 
 # Mensagens para operações
 class MSG:
@@ -33,8 +34,8 @@ class MSG:
     # Mensagens para extrato
     class Extrato:
         sem_movimentacao = "\nNão foram realizadas movimentações"
-        saldo_atualizado = "\nO salto atual da conta é"
-        consulta = " Extrato ".center(15, '=')
+        saldo_atualizado = "\nO salto atual da conta é R$ "
+        consulta = " Extrato ".center(30, '=')
 
     # Mensagens para Caixa
     class Caixa:
@@ -81,31 +82,31 @@ class MSG:
 
     class Menu:
         
-        titulo = " Caixa Eletrônico "
+        titulo = " Caixa Eletrônico ".center(30, '#')
         
         class Cadastro:
-            menu_pricipal = """
-    Bem Vindo
-    Porfavor escolha uma opção
+            menu_pricipal = textwrap.dedent("""
+                Bem Vindo
+                Porfavor escolha uma opção
 
-    1 - Cadastrar nova Usuário
-    2 - Cadastrar nova Conta
-    3 - Realizar Movimentação
+                1 - Cadastrar nova Usuário
+                2 - Cadastrar nova Conta
+                3 - Realizar Movimentação
 
-    4 - Sair
-            """
+                4 - Sair
+                """)
         
         class Operacao:
-            opcao = """
-    Escolha uma operação
+            opcao = textwrap.dedent("""
+                Escolha uma operação
 
-    1 - Sacar
-    2 - Depósitar
-    3 - Tirar Extrato
-    4 - Verificar Saldo
-                    
-    5 - Voltar
-            """
+                1 - Sacar
+                2 - Depósitar
+                3 - Tirar Extrato
+                4 - Verificar Saldo
+                                
+                5 - Voltar
+                        """)
 
 class Padronizacao:
 
@@ -170,7 +171,7 @@ def entradas_validas (tipo_operacao, tipo, usuarios = ""):
     if tipo_operacao == "movimentacao":
 
         mensagem = {
-            "principal": f"\n{MSG.Menu.titulo.center(30, '#')}\n{MSG.Menu.Operacao.opcao.center(30)}\n>>> ",
+            "principal": f"\n{MSG.Menu.titulo}\n{MSG.Menu.Operacao.opcao}\n>>> ",
             "saque": "\nDigite um valor para sacar\n>>> ",
             "deposito": "\nDigite um valor para depositar\n>>> "
         }
@@ -390,14 +391,16 @@ class Historico:
     def extrato(self):
         mensagem = []
         for i, transacoes in enumerate(self._transacoes):
-            mensagem.append(f"""
-        Tipo de Transação: {transacoes["tipo"]}
-        Valor: R$ {transacoes["valor"]}
-        Data da Movimentação:{transacoes["data"]}
-        """)
+            mensagem.append(textwrap.dedent(f"""
+                Tipo de Transação: {transacoes["tipo"]}
+                Valor: R$ {transacoes["valor"]}
+                Data da Movimentação:{transacoes["data"]}
+                """))
         if mensagem == []:
             mensagem = MSG.Extrato.sem_movimentacao
-        return mensagem
+            return {"sem_movimentacao": mensagem}
+        else:
+            return {"com_movimentacao": mensagem}
 
     def adicionar_transacao(self, transacao):
         self._transacoes.append(
@@ -587,8 +590,12 @@ def movimentacao (*, usuario, conta):
             Cliente.realizar_transacao(usuario, conta, transacao)
 
         elif opcao == "extrato" or opcao == 3:
-            for i, extrato in enumerate(conta.historico.extrato):
-                print(extrato)
+            if "sem_movimentacao" in conta.historico.extrato:
+                print(conta.historico.extrato["sem_movimentacao"])
+            else:
+                print(MSG.Extrato.consulta)
+                for i, extrato in enumerate(conta.historico.extrato["com_movimentacao"]):
+                    print(extrato)
 
         elif opcao == "saldo" or opcao == 4:
             print(f"{MSG.Extrato.saldo_atualizado}{conta.saldo}")
@@ -601,9 +608,9 @@ def movimentacao (*, usuario, conta):
             print(MSG.Erro.Caixa.opcao_indisponivel)
 
 
-def main (usuarios, numero_conta):
+def main (usuarios, numero_conta): 
     while True:
-        opcao = Padronizacao.Texto(input(f"\n{MSG.Menu.titulo.center(30, '#')}\n{MSG.Menu.Cadastro.menu_pricipal}\n>>>"))
+        opcao = Padronizacao.Texto(input(f"\n{MSG.Menu.titulo}\n{MSG.Menu.Cadastro.menu_pricipal}\n>>> "))
         
         if(opcao == 1):
             dados_conta = cadastrar_usuario(usuarios)
@@ -637,4 +644,5 @@ def main (usuarios, numero_conta):
         else:
             print(MSG.Erro.Caixa.opcao_indisponivel)
 
-main(usuarios, numero_conta)
+if __name__ == "__main__":
+    main(usuarios, numero_conta)
