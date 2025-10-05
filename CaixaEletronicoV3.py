@@ -99,11 +99,12 @@ class MSG:
             opcao = """
     Escolha uma operação
 
-    1 - Saque
-    2 - Depósito
-    3 - Extrato
+    1 - Sacar
+    2 - Depósitar
+    3 - Tirar Extrato
+    4 - Verificar Saldo
                     
-    4 - Voltar
+    5 - Voltar
             """
 
 class Padronizacao:
@@ -341,6 +342,7 @@ class Conta:
             return False
         else:
             self._saldo -= valor
+            self._limite_saques -= 1
             print(MSG.Saque.bem_sucedido)
             return True
 
@@ -365,10 +367,6 @@ class Conta_Corrente(Conta):
         self._limite_saques = limite_saque # int
         self._saldo = saldo
 
-    def atualizar_limite_saque(self):
-        self._limite_saques -= 1
-        return self._limite_saques
-
     @property
     def limite(self):
         return self._limite
@@ -390,12 +388,15 @@ class Historico:
 
     @property
     def extrato(self):
+        mensagem = []
         for i, transacoes in enumerate(self._transacoes):
-            mensagem = f"""
+            mensagem.append(f"""
         Tipo de Transação: {transacoes["tipo"]}
         Valor: R$ {transacoes["valor"]}
         Data da Movimentação:{transacoes["data"]}
-        """
+        """)
+        if mensagem == []:
+            mensagem = MSG.Extrato.sem_movimentacao
         return mensagem
 
     def adicionar_transacao(self, transacao):
@@ -484,6 +485,10 @@ def cadastrar_usuario (usuarios):
 def cadastrar_conta(usuarios, numero_conta):
     numero_conta += 1
 
+    if usuarios == {}:
+        # Erro -1 = não há usuários cadastrados no sistema
+        return  {"error": -1}
+
     while True:
         # Imprime na tela todos os usuários no sistema
         lista_cpf = []
@@ -562,7 +567,7 @@ def pega_conta (usuarios):
             print(MSG.Erro.Movimentacao.conta_nao_encontrada)
             
 
-def movimentacao (*, usuarios, usuario, conta):
+def movimentacao (*, usuario, conta):
     
     print(conta)
 
@@ -582,14 +587,18 @@ def movimentacao (*, usuarios, usuario, conta):
             Cliente.realizar_transacao(usuario, conta, transacao)
 
         elif opcao == "extrato" or opcao == 3:
-            print(conta.historico.extrato)
+            for i, extrato in enumerate(conta.historico.extrato):
+                print(extrato)
 
-        elif opcao == "voltar" or opcao == 4:
+        elif opcao == "saldo" or opcao == 4:
+            print(f"{MSG.Extrato.saldo_atualizado}{conta.saldo}")
+
+        elif opcao == "voltar" or opcao == 5:
             print(MSG.Caixa.sair)
             break
 
         else:
-            print(MSG.Caixa.Erro.opcao_indisponivel)
+            print(MSG.Erro.Caixa.opcao_indisponivel)
 
 
 def main (usuarios, numero_conta):
@@ -597,34 +606,34 @@ def main (usuarios, numero_conta):
         opcao = Padronizacao.Texto(input(f"\n{MSG.Menu.titulo.center(30, '#')}\n{MSG.Menu.Cadastro.menu_pricipal}\n>>>"))
         
         if(opcao == 1):
-            cadastrar_usuario(usuarios)
+            dados_conta = cadastrar_usuario(usuarios)
+
+            if "error" in dados_conta:
+                print(MSG.Erro.Cadastro.sem_usuarios)
         
         elif (opcao == 2):
             dados = cadastrar_conta(usuarios, numero_conta)
-            numero_conta = dados["conta"]
+            if "error" in dados:
+                print(MSG.Erro.Cadastro.sem_usuarios)
+            else:                
+                numero_conta = dados["conta"]
         
         elif (opcao == 3):
             dados_conta = pega_conta(usuarios)
-
             if "error" in dados_conta:
-
                 if dados_conta["error"] == -1:
                     print(MSG.Erro.Cadastro.sem_usuarios)
-
                 else:
                     print(MSG.Erro.Cadastro.sem_conta)
             else:
                 usuario = dados_conta["usuario"]
                 conta = dados_conta["conta"]
-                movimentacao(usuarios=usuarios, usuario=usuario, conta=conta)
-
+                movimentacao(usuario=usuario, conta=conta)
         elif (opcao == "printar"):
-            print(usuarios)
-        
+            print(usuarios)        
         elif (opcao == 4):
             print(MSG.Caixa.desligar)
-            break
-        
+            break        
         else:
             print(MSG.Erro.Caixa.opcao_indisponivel)
 
